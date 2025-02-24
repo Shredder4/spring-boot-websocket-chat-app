@@ -1,7 +1,10 @@
-name: Deploy to Azure Web App
+name: Build and Test Spring Boot App
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -9,29 +12,25 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Checkout du code
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      # Configuration de Maven
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          distribution: 'temurin'
+          java-version: '21 '
+          cache: maven
 
-      - name: Set up Maven
-        uses: actions/setup-maven@v2
-        with:
-          maven-version: '3.8.1'
-
-      # Build de l'application
       - name: Build with Maven
-        run: mvn clean package -DskipTests
+        run: mvn clean package
 
-      # Déploiement sur Azure
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
+      - name: Run tests
+        run: mvn test
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
         with:
-          app-name: mySpringBootChatApp  # Remplace avec le nom de ton app Azure
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}  # Profil de publication de ton app Azure
-          package: ./target/*.jar  # Chemin vers ton fichier JAR généré
+          name: spring-boot-app
+          path: target/*.jar
+          
